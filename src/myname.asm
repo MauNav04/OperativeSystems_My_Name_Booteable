@@ -6,6 +6,13 @@ MAX_COL      equ 79 - NAME_LEN
 MAX_ROW_DOWN equ 24 - (NAME_LEN - 1)
 
 start2:
+    cli
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    cld
+    sti
+
     call random_start
     mov byte [dir], 0
 
