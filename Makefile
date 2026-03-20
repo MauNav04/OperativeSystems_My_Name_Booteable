@@ -1,28 +1,63 @@
+
+# pa legacy
+
+# Archivo fuente de la primera etapa
 LEGACY_STAGE1_SRC = src/boot.asm
+
+# Archivo fuente de la segunda etapa
 LEGACY_STAGE2_SRC = src/myname.asm
+
+# Binarios intermedios
 LEGACY_STAGE1_BIN = build/stage1.bin
 LEGACY_STAGE2_BIN = build/stage2.bin
+
+# Imagen final booteable para QEMU legacy
 LEGACY_IMG        = build/boot.img
 
+
+# UEFI miedo terror
+
+# Código fuente principal en C
 UEFI_SRC = src/uefi/main.c
+
+# Archivos intermedios de compilación
 UEFI_OBJ = build/main.o
 UEFI_SO  = build/main.so
+
+# Binario EFI final que va dentro de EFI/BOOT/
 UEFI_EFI = uefi_disk/EFI/BOOT/BOOTX64.EFI
+
+# Copia local de las variables UEFI que usa QEMU
 OVMF_VARS = build/OVMF_VARS.fd
 
+# Firmware UEFI de QEMU (OVMF)
 OVMF_CODE = /usr/share/OVMF/OVMF_CODE_4M.fd
+
+# Plantilla base de variables UEFI
 OVMF_VARS_TEMPLATE = /usr/share/OVMF/OVMF_VARS_4M.fd
 
+
+# Si alguien solo pone "make", se compilan ambas versiones
 all: legacy-build uefi-build
 
+
+# compilamos stage 1 y 2 y los concatenamos para crear boot.img
 legacy-build:
 	mkdir -p build
 	nasm -f bin $(LEGACY_STAGE1_SRC) -o $(LEGACY_STAGE1_BIN)
 	nasm -f bin $(LEGACY_STAGE2_SRC) -o $(LEGACY_STAGE2_BIN)
 	cat $(LEGACY_STAGE1_BIN) $(LEGACY_STAGE2_BIN) > $(LEGACY_IMG)
 
+
+
+# corremos el legacy en qemu
 legacy-run: legacy-build
 	qemu-system-i386 -fda $(LEGACY_IMG) -boot a
+
+
+
+# Compila main.c como aplicación UEFI:
+# .c -> .o -> .so -> BOOTX64.EFI
 
 uefi-build:
 	mkdir -p build
@@ -38,6 +73,10 @@ uefi-build:
 	  -j .rel -j .rela -j .reloc \
 	  --target=efi-app-x86_64 $(UEFI_SO) $(UEFI_EFI)
 
+
+
+# Compila la versión UEFI, copia una versión limpia
+# de OVMF_VARS y luego arranca QEMU en modo UEFI
 uefi-run: uefi-build
 	cp $(OVMF_VARS_TEMPLATE) $(OVMF_VARS)
 	qemu-system-x86_64 \
@@ -45,6 +84,8 @@ uefi-run: uefi-build
 	  -drive if=pflash,format=raw,file=$(OVMF_VARS) \
 	  -drive format=raw,file=fat:rw:uefi_disk
 
+
+# limpiamos por si acaso
 clean:
 	rm -rf build
 	rm -f uefi_disk/EFI/BOOT/BOOTX64.EFI
