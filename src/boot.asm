@@ -2,7 +2,7 @@
 [org 0x7C00]
 
 
-; primera etapa del arranque.
+
 
 
 ; Dirección donde vamos a cargar el stage 2
@@ -10,7 +10,7 @@ STAGE2_SEG     equ 0x0000
 STAGE2_OFF     equ 0x8000
 
 ; Cantidad de sectores que ocupa el stage 2
-; Esto debe coincidir con el tamaño real de myname.asm compilado.
+
 STAGE2_SECTORS equ 8
 
 start:
